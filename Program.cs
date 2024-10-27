@@ -28,8 +28,22 @@ internal class SignatureHelpHandler : ISignatureHelpHandler
 
     public async Task<SignatureHelp?> Handle(SignatureHelpParams param, CancellationToken cancellationToken)
     {
+	// when on the first line, no need to return field name
+	if (param.Position.Line == 0)
+            return null;
+
         string[] content = await File.ReadAllLinesAsync(param.TextDocument.Uri.GetFileSystemPath());
-        SignatureInformation signature = new SignatureInformation() with { Label = "Example Signature" };
+        string? currentLine = content.ElementAtOrDefault(param.Position.Line);
+	if (currentLine is null)
+            return null;
+
+        int fieldNum = currentLine.Take(param.Position.Character).Where(c => c == ',').Count();
+        string? fieldName = content.ElementAtOrDefault(0)?.Split(',')?.ElementAtOrDefault(fieldNum);
+
+	if (fieldName is null)
+            return null;
+
+        SignatureInformation signature = new SignatureInformation() with { Label = fieldName };
         SignatureHelp ret = new SignatureHelp() with { Signatures = Container<SignatureInformation>.From(signature) };
         return ret;
     }
