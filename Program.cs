@@ -1,7 +1,10 @@
-﻿using OmniSharp.Extensions.LanguageServer.Server;
+﻿using MediatR;
+using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
+using CsvLangServer;
 
 var server = await LanguageServer.From(
     options =>
@@ -16,6 +19,13 @@ await server.WaitForExit.ConfigureAwait(false);
 
 internal class SignatureHelpHandler : ISignatureHelpHandler
 {
+    private IMediator mediator;
+
+    public SignatureHelpHandler(ILanguageServerFacade langserver)
+    {
+        this.mediator = mediator;
+    }
+
     public SignatureHelpRegistrationOptions GetRegistrationOptions(SignatureHelpCapability capability, ClientCapabilities clientCapabilities)
     {
         var opts = new SignatureHelpRegistrationOptions();
@@ -32,7 +42,14 @@ internal class SignatureHelpHandler : ISignatureHelpHandler
 	if (param.Position.Line == 0)
             return null;
 
-        string[] content = await File.ReadAllLinesAsync(param.TextDocument.Uri.GetFileSystemPath());
+        TextDocumentIdentifier id = new TextDocumentIdentifier(param.TextDocument.Uri);
+        TextDocumentItem? item = await mediator.Send(new RequestTextDocumentItem(id));
+        if (item is null)
+        {
+            return null;
+        }
+        string[] content = item.Text.Split("\n");
+
         string? currentLine = content.ElementAtOrDefault(param.Position.Line);
 	if (currentLine is null)
             return null;

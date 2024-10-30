@@ -8,7 +8,9 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 
 using MediatR;
 
-internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
+internal record RequestTextDocumentItem(TextDocumentIdentifier identifier) : IRequest<TextDocumentItem?>;
+
+internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase, IRequestHandler<RequestTextDocumentItem?, TextDocumentItem>
 {
     public Dictionary<TextDocumentIdentifier, TextDocumentItem> documents { get; private set; }
 
@@ -64,6 +66,9 @@ internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 
     // TODO: What to do when it saves file?
     public override Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken token) => Unit.Task;
+
+    public Task<TextDocumentItem?> Handle(RequestTextDocumentItem message, CancellationToken token)
+    => Task.FromResult(documents.GetValueOrDefault(message.identifier));
 
     /// <returns>true if change is applied successfully. False otherwise.</returns>
     private bool ApplyChange(Range range, string newText, ref List<string> contents)
