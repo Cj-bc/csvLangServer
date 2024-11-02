@@ -73,12 +73,29 @@ internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 	
 	if (!ValidateRange(range, contents)) return false;
 
-        string[] linedNewText = newText.Split("\n");
 
-	contents[startLine] = $"{contents[startLine].Substring(0, startChar-1)}{newText[0]}";
-	contents.InsertRange(startLine+1, linedNewText.Skip(1).Append(contents[endLine].Substring(endChar)));
+        if (startLine == endLine)
+        {
+	    contents[startLine] = $"{contents[startLine].Substring(0, startChar-1)}{newText}{contents[endLine].Substring(endChar)}";
+        } else
+        {
+            string[] linedNewText = newText.Split("\n");
 
-	return true;
+            contents.RemoveRange(startLine, endLine - startLine + 1);
+            contents.Insert(startLine, $"{contents[startLine].Substring(0, startChar - 1)}{linedNewText[0]}");
+
+            if (endChar == 0)
+            {
+                contents.InsertRange(startLine + 1, linedNewText.Skip(1).Append(contents[endLine]));
+            } else
+            {
+                contents.InsertRange(startLine + 1, linedNewText.Skip(1).Take(linedNewText.Count() - 2)
+                             .Append($"{linedNewText[linedNewText.Count() - 1]}{contents[endLine].Substring(endChar)}"));
+            }
+        }
+
+
+        return true;
     }
 
     private bool ValidateRange(Range range, in List<string> contents)
