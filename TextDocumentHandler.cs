@@ -88,8 +88,8 @@ internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         int endLine = range.End.Line;
         int endChar = range.End.Character;
 
-        return (0 <= startLine && startLine < contents.Count
-                && 0 <= endLine && endLine < contents.Count
+        return (0 <= startLine && startLine < contents.Count+1
+                && 0 <= endLine && endLine < contents.Count+1
 		&& startLine <= endLine
 		&& !(startLine == endLine && endChar < startChar)
 		&& 0 <= startChar && startChar < contents[startLine].Length
