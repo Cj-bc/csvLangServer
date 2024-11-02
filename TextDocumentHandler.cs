@@ -8,11 +8,13 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 
 using MediatR;
 
-internal record RequestTextDocumentItem(TextDocumentIdentifier identifier) : IRequest<TextDocumentItem?>;
-
-internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase, IRequestHandler<RequestTextDocumentItem?, TextDocumentItem>
+internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 {
-    public Dictionary<TextDocumentIdentifier, TextDocumentItem> documents { get; private set; }
+    private IDocumentsRepositoryService documentRepo;
+    public TextDocumentSyncHandler(IDocumentsRepositoryService documentRepository)
+    {
+        documentRepo = documentRepository;
+    }
 
     public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri doc) => new TextDocumentAttributes(doc, "csv");
 
@@ -22,53 +24,44 @@ internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase, IRequestHa
         return opts;
     }
 
-    public override Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken token)
+    public async override Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken token)
     {
-	// TODO: What to do if given TextDocumentIdentifier is already registered?
-        documents.Add(new (notification.TextDocument.Uri), notification.TextDocument);
-
-        return Unit.Task;
+        // TODO: What to do if given TextDocumentIdentifier is already registered?
+        await documentRepo.Handle(new PutTextDocumentItemRequest(notification.TextDocument), token);
+        return Unit.Value;
     }
 
-    public override Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken token)
+    public async override Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken token)
     {
 	// TODO: What to do if given TextDocumentIdentifier is not in the map?
-        documents.Remove(new(notification.TextDocument.Uri));
-        return Unit.Task;
+        await documentRepo.Handle(new DeleteTextDocumentItemRequest(notification.TextDocument.Uri), token);
+        return Unit.Value;
     }
 
-    public override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken token)
+    public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken token)
     {
         TextDocumentIdentifier identifier = new(notification.TextDocument.Uri);
-        if (!documents.ContainsKey(identifier))
+        if (await documentRepo.Handle(new GetTextDocumentItemRequest(identifier), token) is TextDocumentItem item)
         {
-            return Unit.Task;
+	    foreach (TextDocumentContentChangeEvent? change in notification.ContentChanges)
+	    {
+		List<string> c = item.Text.Split("\n").ToList();
+		if (change.Range is Range modifiedRange)
+		{
+		    ApplyChange(modifiedRange, change.Text, ref c);
+		    item = item with { Text = c.Aggregate("", (a, b) => $"{a}\n{b}") };
+		} else
+		{
+		    item = item with { Text = change.Text };
+		}
+	    }
+            await documentRepo.Handle(new PutTextDocumentItemRequest(item), token);
         }
-        TextDocumentItem item = documents[identifier];
-
-        foreach (TextDocumentContentChangeEvent? change in notification.ContentChanges)
-        {
-	    List<string> c = item.Text.Split("\n").ToList();
-            if (change.Range is Range modifiedRange)
-            {
-                ApplyChange(modifiedRange, change.Text, ref c);
-                item = item with { Text = c.Aggregate("", (a, b) => $"{a}\n{b}") };
-            } else
-            {
-                item = item with { Text = change.Text };
-            }
-        }
-
-        documents[identifier] = item;
-
-        return Unit.Task;
+        return Unit.Value;
     }
 
     // TODO: What to do when it saves file?
     public override Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken token) => Unit.Task;
-
-    public Task<TextDocumentItem?> Handle(RequestTextDocumentItem message, CancellationToken token)
-    => Task.FromResult(documents.GetValueOrDefault(message.identifier));
 
     /// <returns>true if change is applied successfully. False otherwise.</returns>
     private bool ApplyChange(Range range, string newText, ref List<string> contents)
