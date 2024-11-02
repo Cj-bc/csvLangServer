@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
@@ -13,6 +13,7 @@ var server = await LanguageServer.From(
     .WithOutput(Console.OpenStandardOutput())
     .WithHandler<SignatureHelpHandler>()
     .WithHandler<TextDocumentSyncHandler>()
+    .WithServices(services => services.AddScoped<IDocumentsRepositoryService, OpenedDocumentsRepositoryService>())
 );
 
 await server.WaitForExit.ConfigureAwait(false);
@@ -20,11 +21,11 @@ await server.WaitForExit.ConfigureAwait(false);
 
 internal class SignatureHelpHandler : ISignatureHelpHandler
 {
-    private IMediator mediator;
+    private IDocumentsRepositoryService documentRepo;
 
-    public SignatureHelpHandler(ILanguageServerFacade langserver)
+    public SignatureHelpHandler(IDocumentsRepositoryService documentRepository)
     {
-        this.mediator = mediator;
+        documentRepo = documentRepository;
     }
 
     public SignatureHelpRegistrationOptions GetRegistrationOptions(SignatureHelpCapability capability, ClientCapabilities clientCapabilities)
@@ -44,7 +45,7 @@ internal class SignatureHelpHandler : ISignatureHelpHandler
             return null;
 
         TextDocumentIdentifier id = new TextDocumentIdentifier(param.TextDocument.Uri);
-        TextDocumentItem? item = await mediator.Send(new RequestTextDocumentItem(id));
+        TextDocumentItem? item = await documentRepo.Handle(new GetTextDocumentItemRequest(id), cancellationToken);
         if (item is null)
         {
             return null;
