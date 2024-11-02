@@ -12,6 +12,7 @@ var server = await LanguageServer.From(
     .WithInput(Console.OpenStandardInput())
     .WithOutput(Console.OpenStandardOutput())
     .WithHandler<SignatureHelpHandler>()
+    .WithHandler<TextDocumentSyncHandler>()
 );
 
 await server.WaitForExit.ConfigureAwait(false);
