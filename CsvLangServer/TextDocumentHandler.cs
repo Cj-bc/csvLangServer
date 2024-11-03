@@ -76,7 +76,16 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 
         if (startLine == endLine)
         {
-	    contents[startLine] = $"{contents[startLine].Substring(0, startChar-1)}{newText}{contents[endLine].Substring(endChar)}";
+            if (IsAppendingRange(range, contents))
+            {
+		contents.Insert(startLine, newText);
+            }
+            else
+            {
+                string oldContent = contents[startLine];
+                contents.RemoveAt(startLine);
+		contents.Insert(startLine, $"{oldContent.Substring(0, startChar-1)}{newText}{oldContent.Substring(endChar)}");
+            }
         } else
         {
             string[] linedNewText = newText.Split("\n");
