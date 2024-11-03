@@ -23,7 +23,13 @@ public class OpenedDocumentsRepositoryService : IDocumentsRepositoryService
 
     public Task<bool> Handle(PutTextDocumentItemRequest request, CancellationToken token)
     {
-        openedDocuments.Add(new(request.item.Uri), request.item);
+        TextDocumentIdentifier id = new(request.item.Uri);
+        if (openedDocuments.ContainsKey(id))
+        {
+            openedDocuments.Remove(id);
+        }
+
+        openedDocuments.Add(id, request.item);
         return Task.FromResult(true);
     }
 
