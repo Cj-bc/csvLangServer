@@ -68,7 +68,6 @@ public class TextDocumentSyncHandlerTest
         };
 
         await documentHandler.Handle(param, default);
-        await documentHandler.Handle(param, default);
         TextDocumentItem? stored = await docRepo.Handle(new GetTextDocumentItemRequest(new(item.Uri)), default);
 	
         Assert.That(stored, Is.Not.Null);
