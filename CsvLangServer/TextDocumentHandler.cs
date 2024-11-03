@@ -83,8 +83,10 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             else
             {
                 string oldContent = contents[startLine];
+                string pre = startChar == 0 ? "" : oldContent.Substring(0, startChar - 1);
+                string post = oldContent.Substring(endChar);
                 contents.RemoveAt(startLine);
-		contents.Insert(startLine, $"{oldContent.Substring(0, startChar-1)}{newText}{oldContent.Substring(endChar)}");
+		contents.Insert(startLine, $"{pre}{newText}{post}");
             }
         } else
         {
