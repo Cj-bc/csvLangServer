@@ -105,12 +105,22 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         int endLine = range.End.Line;
         int endChar = range.End.Character;
 
-        return (0 <= startLine && startLine < contents.Count+1
-                && 0 <= endLine && endLine < contents.Count+1
+        if (contents.Count < startLine || contents.Count < endLine)
+        {
+	    bool endCharValidation = startChar < contents[startLine].Length && endChar < contents[endLine].Length;
+
+            return 0 <= startLine && 0 <= endLine
+                && startLine <= endLine
+                && !(startLine == endLine && endChar < startChar)
+                && 0 <= startChar && 0 <= endChar
+                && endCharValidation;
+        } else
+        {
+	    // when appending new line at end of current contents
+	    return 0 <= startLine && 0 <= endLine
 		&& startLine <= endLine
 		&& !(startLine == endLine && endChar < startChar)
-		&& 0 <= startChar && startChar < contents[startLine].Length
-		&& 0 <= endChar && endChar < contents[endLine].Length
-        );
+		&& 0 <= startChar && 0 <= endChar;
+        }
     }
 }
