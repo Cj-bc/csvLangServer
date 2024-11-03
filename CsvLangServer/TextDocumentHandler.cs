@@ -90,8 +90,10 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         {
             string[] linedNewText = newText.Split("\n");
 
+	    string oldStartContent = contents[startLine];
+	    string oldEndContent = contents[endLine];
             contents.RemoveRange(startLine, endLine - startLine + 1);
-            contents.Insert(startLine, $"{contents[startLine].Substring(0, startChar - 1)}{linedNewText[0]}");
+            contents.Insert(startLine, $"{oldStartContent.Substring(0, startChar - 1)}{linedNewText[0]}");
 
             if (endChar == 0)
             {
@@ -99,7 +101,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             } else
             {
                 contents.InsertRange(startLine + 1, linedNewText.Skip(1).Take(linedNewText.Count() - 2)
-                             .Append($"{linedNewText[linedNewText.Count() - 1]}{contents[endLine].Substring(endChar)}"));
+                             .Append($"{linedNewText[linedNewText.Count() - 1]}{oldEndContent.Substring(endChar)}"));
             }
         }
 
