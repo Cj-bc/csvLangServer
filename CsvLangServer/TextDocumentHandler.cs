@@ -49,8 +49,8 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 		if (change.Range is Range modifiedRange)
 		{
 		    ApplyChange(modifiedRange, change.Text, ref c);
-		    item = item with { Text = c.Aggregate("", (a, b) => $"{a}\n{b}") };
-		} else
+                    item = item with { Text = string.Join("\n", c) };
+                } else
 		{
 		    item = item with { Text = change.Text };
 		}
