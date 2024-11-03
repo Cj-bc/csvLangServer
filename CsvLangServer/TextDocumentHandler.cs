@@ -8,7 +8,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 
 using MediatR;
 
-internal class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
+public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 {
     private IDocumentsRepositoryService documentRepo;
     public TextDocumentSyncHandler(IDocumentsRepositoryService documentRepository)
