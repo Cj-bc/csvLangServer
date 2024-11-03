@@ -18,7 +18,6 @@ var server = await LanguageServer.From(
 
 await server.WaitForExit.ConfigureAwait(false);
 
-
 internal class SignatureHelpHandler : ISignatureHelpHandler
 {
     private IDocumentsRepositoryService documentRepo;
@@ -40,9 +39,12 @@ internal class SignatureHelpHandler : ISignatureHelpHandler
 
     public async Task<SignatureHelp?> Handle(SignatureHelpParams param, CancellationToken cancellationToken)
     {
+	// TODO: Skip empty lines at beginning
 	// when on the first line, no need to return field name
 	if (param.Position.Line == 0)
             return null;
+
+        // if (param.Context.TriggerKind == SignatureHelpTriggerKind.ContentChange)
 
         TextDocumentIdentifier id = new TextDocumentIdentifier(param.TextDocument.Uri);
         TextDocumentItem? item = await documentRepo.Handle(new GetTextDocumentItemRequest(id), cancellationToken);
