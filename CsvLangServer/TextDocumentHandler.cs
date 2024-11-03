@@ -98,6 +98,8 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         return true;
     }
 
+    private bool IsAppendingRange(in Range range, in List<string> contents) => contents.Count <= range.Start.Line || contents.Count <= range.End.Line;
+
     private bool ValidateRange(Range range, in List<string> contents)
     {
         int startLine = range.Start.Line;
@@ -105,7 +107,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         int endLine = range.End.Line;
         int endChar = range.End.Character;
 
-        if (contents.Count < startLine || contents.Count < endLine)
+        if (!IsAppendingRange(range, contents))
         {
 	    bool endCharValidation = startChar < contents[startLine].Length && endChar < contents[endLine].Length;
 
