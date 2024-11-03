@@ -64,7 +64,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
     public override Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken token) => Unit.Task;
 
     /// <returns>true if change is applied successfully. False otherwise.</returns>
-    private bool ApplyChange(Range range, string newText, ref List<string> contents)
+    private bool ApplyChange(in Range range, in string newText, ref List<string> contents)
     {
         int startLine = range.Start.Line;
         int startChar = range.Start.Character;
@@ -100,7 +100,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
 
     private bool IsAppendingRange(in Range range, in List<string> contents) => contents.Count <= range.Start.Line || contents.Count <= range.End.Line;
 
-    private bool ValidateRange(Range range, in List<string> contents)
+    private bool ValidateRange(in Range range, in List<string> contents)
     {
         int startLine = range.Start.Line;
         int startChar = range.Start.Character;
