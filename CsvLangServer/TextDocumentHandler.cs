@@ -114,21 +114,35 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             return true;
         }
 
+        string startLineContent = contents[startLine];
+        string endLineContent = contents[endLine];
+
+
+	// when range is within one line
         if (startLine == endLine)
         {
+	    // startChar = 1, endchar = 7
+	    // 01234567
+	    // abcdefgh
+	    //  +----/
+	    // --> ah
+	    contents[startLine] = startLineContent.Substring(0, startChar) + startLineContent.Substring(endChar);
 	    return true;
         }
 
+	// when range indicates "until end of line"
         if (startLine + 1 == endLine && endChar == 0)
         {
-            // when range indicates "until end of line"
+            contents[startLine] = startLineContent.Substring(0, startChar);
 	    return true;
         }
-        else
-        {
-        }
 
-	return false;
+	// when range continue across several lines
+        contents[startLine] = startLineContent.Substring(0, startChar);
+        contents.RemoveRange(startLine+1, endLine - startLine - 1);
+        contents[endLine] = endLineContent.Substring(endChar);
+
+        return true;
     }
 
     private bool IsAppendingRange(in Range range, in List<string> contents) => contents.Count <= range.Start.Line || contents.Count <= range.End.Line;
