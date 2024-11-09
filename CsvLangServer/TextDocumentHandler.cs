@@ -86,6 +86,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         }
 
         string oldStartLine = contents[startLine];
+        contents.RemoveAt(startLine);
         contents.InsertRange(startLine, linedNewText.Select((c, idx) => (idx) switch
 	{
 	    0 => oldStartLine.Substring(0, startChar) + c,
