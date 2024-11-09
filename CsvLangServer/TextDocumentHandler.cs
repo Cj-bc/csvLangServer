@@ -70,28 +70,27 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         int startChar = range.Start.Character;
         int endLine = range.End.Line;
         int endChar = range.End.Character;
+	IEnumerable<string> linedNewText = newText.Split("\n").Select(str => str.TrimEnd('\r'));
 	
 	if (!ValidateRange(range, contents)) return false;
+
+        if (IsAppendingRange(range, contents))
+        {
+            contents.AddRange(linedNewText);
+            return true;
+        }
 
 
         if (startLine == endLine)
         {
-            if (IsAppendingRange(range, contents))
-            {
-		contents.Insert(startLine, newText);
-            }
-            else
-            {
-                string oldContent = contents[startLine];
-                string pre = startChar == 0 ? "" : oldContent.Substring(0, startChar - 1);
-                string post = oldContent.Substring(endChar);
-                contents.RemoveAt(startLine);
-		contents.Insert(startLine, $"{pre}{newText}{post}");
-            }
+            string oldContent = contents[startLine];
+	    string pre = startChar == 0 ? "" : oldContent.Substring(0, startChar - 1);
+	    string post = oldContent.Substring(endChar);
+	    contents.RemoveAt(startLine);
+	    contents.Insert(startLine, $"{pre}{newText}{post}");
+
         } else
         {
-	    IEnumerable<string> linedNewText = newText.Split("\n").Select(str => str.TrimEnd('\r'));
-
 	    string oldStartContent = contents[startLine];
 	    string oldEndContent = contents[endLine];
             contents.RemoveRange(startLine, endLine - startLine + 1);
