@@ -80,6 +80,10 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             return true;
         }
 
+        if (!RemoveRange(range, ref contents))
+        {
+            return false;
+        }
 
         if (startLine == endLine)
         {
@@ -122,7 +126,6 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         {
             if (!IsAppendingRange(range, contents))
             {
-                contents.RemoveAt(startLine);
 		return true;
             }
 	    return true;
@@ -131,7 +134,6 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         if (startLine + 1 == endLine && endChar == 0)
         {
             // when range indicates "until end of line"
-            contents.RemoveAt(startLine);
 	    return true;
         }
         else
