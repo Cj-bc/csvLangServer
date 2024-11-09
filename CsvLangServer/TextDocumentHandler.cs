@@ -104,12 +104,18 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         int endLine = range.End.Line;
         int endChar = range.End.Character;
 
+        if (!ValidateRange(range, contents))
+        {
+            return false;
+        }
+
+        if (IsAppendingRange(range, contents))
+        {
+            return true;
+        }
+
         if (startLine == endLine)
         {
-            if (!IsAppendingRange(range, contents))
-            {
-		return true;
-            }
 	    return true;
         }
 
