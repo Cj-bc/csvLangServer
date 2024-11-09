@@ -85,31 +85,13 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             return false;
         }
 
-        if (startLine == endLine)
-        {
-            string oldContent = contents[startLine];
-	    string pre = startChar == 0 ? "" : oldContent.Substring(0, startChar - 1);
-	    string post = oldContent.Substring(endChar);
-	    contents.RemoveAt(startLine);
-	    contents.Insert(startLine, $"{pre}{newText}{post}");
-
-        } else
-        {
-	    string oldStartContent = contents[startLine];
-	    string oldEndContent = contents[endLine];
-            contents.RemoveRange(startLine, endLine - startLine + 1);
-            contents.Insert(startLine, $"{oldStartContent.Substring(0, startChar - 1)}{linedNewText[0]}");
-
-            if (endChar == 0)
-            {
-                contents.InsertRange(startLine + 1, linedNewText.Skip(1).Append(contents[endLine]));
-            } else
-            {
-                contents.InsertRange(startLine + 1, linedNewText.Skip(1).Take(linedNewText.Count() - 2)
-                             .Append($"{linedNewText[linedNewText.Count() - 1]}{oldEndContent.Substring(endChar)}"));
-            }
-        }
-
+        string oldStartLine = contents[startLine];
+        contents.InsertRange(startLine, linedNewText.Select((c, idx) => (idx) switch
+	{
+	    0 => oldStartLine.Substring(0, startChar) + c,
+	    _ when idx == linedNewText.Count() - 1 => c + oldStartLine.Substring(startChar + 1),
+	    _ => c
+	}));
 
         return true;
     }
