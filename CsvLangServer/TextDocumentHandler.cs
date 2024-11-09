@@ -90,7 +90,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
             }
         } else
         {
-            string[] linedNewText = newText.Split("\n");
+	    IEnumerable<string> linedNewText = newText.Split("\n").Select(str => str.TrimEnd('\r'));
 
 	    string oldStartContent = contents[startLine];
 	    string oldEndContent = contents[endLine];
