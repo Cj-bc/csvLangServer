@@ -90,7 +90,7 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         contents.InsertRange(startLine, linedNewText.Select((c, idx) => (idx) switch
 	{
 	    0 => oldStartLine.Substring(0, startChar) + c,
-	    _ when idx == linedNewText.Count() - 1 => c + oldStartLine.Substring(startChar + 1),
+	    _ when idx == linedNewText.Count() - 1 => c + oldStartLine.Substring(startChar),
 	    _ => c
 	}));
 
