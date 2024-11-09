@@ -110,6 +110,37 @@ public class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
         return true;
     }
 
+    /// Remove given range from <param name="contents">contents</param>
+    private bool RemoveRange(in Range range, ref List<string> contents)
+    {
+        int startLine = range.Start.Line;
+        int startChar = range.Start.Character;
+        int endLine = range.End.Line;
+        int endChar = range.End.Character;
+
+        if (startLine == endLine)
+        {
+            if (!IsAppendingRange(range, contents))
+            {
+                contents.RemoveAt(startLine);
+		return true;
+            }
+	    return true;
+        }
+
+        if (startLine + 1 == endLine && endChar == 0)
+        {
+            // when range indicates "until end of line"
+            contents.RemoveAt(startLine);
+	    return true;
+        }
+        else
+        {
+        }
+
+	return false;
+    }
+
     private bool IsAppendingRange(in Range range, in List<string> contents) => contents.Count <= range.Start.Line || contents.Count <= range.End.Line;
 
     private bool ValidateRange(in Range range, in List<string> contents)
