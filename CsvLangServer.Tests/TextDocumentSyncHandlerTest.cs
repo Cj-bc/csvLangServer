@@ -33,6 +33,28 @@ public class TextDocumentSyncHandlerTest
     }
 
     [Test]
+    public async Task RemoveInsideLine()
+    {
+        var item = new TextDocumentItem() with { Text = headerText };
+        DidOpenTextDocumentParams registerOpen = new();
+        registerOpen.TextDocument = item;
+        await documentHandler.Handle(registerOpen, default);
+
+        var id = new OptionalVersionedTextDocumentIdentifier() with { Uri = item.Uri };
+        var changeEvent = new TextDocumentContentChangeEvent() with { Range = new(0, 5, 0, 10), Text = "" };
+        var param = new DidChangeTextDocumentParams() with
+        {
+            TextDocument = id,
+            ContentChanges = new(changeEvent),
+	};
+        await documentHandler.Handle(param, default);
+        TextDocumentItem? stored = await docRepo.Handle(new GetTextDocumentItemRequest(new(item.Uri)), default);
+
+        Assert.That(stored, Is.Not.Null);
+        Assert.That(stored?.Text, Is.EqualTo("date,amount,description"));
+    }
+
+    [Test]
     public async Task InsertInsideLine()
     {
         var item = new TextDocumentItem() with { Text = headerText };
@@ -50,6 +72,51 @@ public class TextDocumentSyncHandlerTest
 
         Assert.That(stored, Is.Not.Null);
         Assert.That(stored.Text, Is.EqualTo("date,kind,amount,description"));
+    }
+
+    [Test]
+    public async Task InsertEol()
+    {
+        var item = new TextDocumentItem() with { Text = headerText };
+        DidOpenTextDocumentParams registerOpen = new();
+        registerOpen.TextDocument = item;
+        await documentHandler.Handle(registerOpen, default);
+
+        var id = new OptionalVersionedTextDocumentIdentifier() with { Uri = item.Uri };
+        var changeEvent = new TextDocumentContentChangeEvent() with { Range = new(0, 28, 1, 0), Text = ",appended" };
+        var param = new DidChangeTextDocumentParams()
+        {
+            TextDocument = id,
+            ContentChanges = new(changeEvent)
+        };
+
+        await documentHandler.Handle(param, default);
+        TextDocumentItem? stored = await docRepo.Handle(new GetTextDocumentItemRequest(new(item.Uri)), default);
+
+        Assert.That(stored, Is.Not.Null);
+        Assert.That(stored.Text, Is.EqualTo(item.Text + ",appended"));
+    }
+
+    public async Task InsertBol()
+    {
+        var item = new TextDocumentItem() with { Text = headerText };
+        DidOpenTextDocumentParams registerOpen = new();
+        registerOpen.TextDocument = item;
+        await documentHandler.Handle(registerOpen, default);
+
+        var id = new OptionalVersionedTextDocumentIdentifier() with { Uri = item.Uri };
+        var changeEvent = new TextDocumentContentChangeEvent() with { Range = new(0, 0, 0, 0), Text = "inserted," };
+        var param = new DidChangeTextDocumentParams()
+        {
+            TextDocument = id,
+            ContentChanges = new(changeEvent),
+        };
+
+        await documentHandler.Handle(param, default);
+	TextDocumentItem? stored = await docRepo.Handle(new GetTextDocumentItemRequest(new(item.Uri)), default);
+
+        Assert.That(stored, Is.Not.Null);
+        Assert.That(stored.Text, Is.EqualTo($"inserted,{item.Text}"));
     }
 
     [Test]
